@@ -2,29 +2,9 @@
    GITHUB SETTINGS
 ===================================================== */
 
-/*
-    مهم جدًا:
+const GITHUB_USERNAME = "elsayedghanem11";
 
-    غيّر فقط:
-
-    GITHUB_USERNAME
-    GITHUB_REPO
-
-    مثال:
-
-    لو رابط GitHub:
-
-    https://github.com/ahmed123/maktaba-zaeem
-
-    يبقى:
-
-    GITHUB_USERNAME = "ahmed123";
-    GITHUB_REPO = "maktaba-zaeem";
-*/
-
-const GITHUB_USERNAME = "ضع_اسم_حسابك_هنا";
-
-const GITHUB_REPO = "ضع_اسم_المستودع_هنا";
+const GITHUB_REPO = "-1";
 
 const GITHUB_BRANCH = "main";
 
@@ -41,7 +21,7 @@ const categories = [
 
     "كروت أفراح وكتب كتاب",
 
-    "بصمات أفراح",
+    "بصمات افراح",
 
     "مناديل كتب كتاب",
 
@@ -94,17 +74,20 @@ let currentIndex = 0;
 
 
 /* =====================================================
-   CREATE GITHUB API URL
+   GITHUB API URL
 ===================================================== */
 
 function getGitHubUrl(category) {
 
     return (
-        `https://api.github.com/repos/` +
-        `${GITHUB_USERNAME}/` +
-        `${GITHUB_REPO}/contents/images/` +
+        "https://api.github.com/repos/" +
+        encodeURIComponent(GITHUB_USERNAME) +
+        "/" +
+        encodeURIComponent(GITHUB_REPO) +
+        "/contents/images/" +
         encodeURIComponent(category) +
-        `?ref=${GITHUB_BRANCH}`
+        "?ref=" +
+        encodeURIComponent(GITHUB_BRANCH)
     );
 
 }
@@ -123,7 +106,9 @@ function isImage(fileName) {
         ".png",
         ".webp",
         ".gif",
-        ".bmp"
+        ".bmp",
+        ".jfif",
+        ".avif"
 
     ];
 
@@ -154,7 +139,134 @@ function getImageName(fileName) {
 
 
 /* =====================================================
-   LOAD GITHUB GALLERY
+   LOAD ONE CATEGORY
+===================================================== */
+
+async function loadCategory(category) {
+
+    const url =
+        getGitHubUrl(category);
+
+
+    try {
+
+        const response =
+            await fetch(url, {
+                cache: "no-store"
+            });
+
+
+        /*
+            لو الفولدر مش موجود
+            نرجع قسم فاضي
+        */
+
+        if (
+            response.status === 404
+        ) {
+
+            console.warn(
+                "Folder not found:",
+                category
+            );
+
+
+            return {
+
+                name: category,
+
+                images: []
+
+            };
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "GitHub Error: " +
+                response.status
+            );
+
+        }
+
+
+        const files =
+            await response.json();
+
+
+        /*
+            ناخد الصور فقط
+        */
+
+        const images =
+            files
+
+                .filter(file =>
+
+                    file.type === "file" &&
+                    isImage(file.name)
+
+                )
+
+                .map(file => ({
+
+                    name:
+                        getImageName(
+                            file.name
+                        ),
+
+                    fileName:
+                        file.name,
+
+                    url:
+                        file.download_url,
+
+                    category:
+                        category
+
+                }));
+
+
+        return {
+
+            name:
+                category,
+
+            images:
+                images
+
+        };
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading:",
+            category,
+            error
+        );
+
+
+        return {
+
+            name:
+                category,
+
+            images:
+                []
+
+        };
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD GALLERY
 ===================================================== */
 
 async function loadGallery() {
@@ -181,109 +293,34 @@ async function loadGallery() {
     try {
 
         /*
-            نتأكد أن البيانات الأساسية صحيحة
+            تحميل كل الأقسام
         */
-
-        if (
-            GITHUB_USERNAME.includes("ضع_") ||
-            GITHUB_REPO.includes("ضع_")
-        ) {
-
-            throw new Error(
-                "قم بتعديل بيانات GitHub داخل script.js"
-            );
-
-        }
-
 
         const requests =
             categories.map(
-                async category => {
-
-                    const response =
-                        await fetch(
-                            getGitHubUrl(category)
-                        );
-
-
-                    if (!response.ok) {
-
-                        /*
-                            لو الفولدر مش موجود
-                            نرجع قسم فاضي
-                        */
-
-                        if (
-                            response.status === 404
-                        ) {
-
-                            return {
-
-                                name: category,
-
-                                images: []
-
-                            };
-
-                        }
-
-
-                        throw new Error(
-                            `GitHub Error ${response.status}`
-                        );
-
-                    }
-
-
-                    const files =
-                        await response.json();
-
-
-                    const images =
-                        files
-                            .filter(file =>
-                                file.type === "file" &&
-                                isImage(file.name)
-                            )
-                            .map(file => ({
-
-                                name:
-                                    getImageName(
-                                        file.name
-                                    ),
-
-                                fileName:
-                                    file.name,
-
-                                url:
-                                    file.download_url,
-
-                                category:
-                                    category
-
-                            }));
-
-
-                    return {
-
-                        name:
-                            category,
-
-                        images:
-                            images
-
-                    };
-
-                }
+                category =>
+                    loadCategory(
+                        category
+                    )
             );
 
 
         galleryData =
-            await Promise.all(requests);
+            await Promise.all(
+                requests
+            );
 
+
+        /*
+            إنشاء الأزرار
+        */
 
         createFilters();
 
+
+        /*
+            عرض كل الصور
+        */
 
         showGallery("all");
 
@@ -301,15 +338,16 @@ async function loadGallery() {
 
             <div class="error">
 
-                <i class="fa-solid fa-triangle-exclamation"></i>
+                <i
+                    class="fa-solid fa-triangle-exclamation"
+                ></i>
 
                 <h3>
                     حصل خطأ في تحميل الأعمال
                 </h3>
 
                 <p>
-                    تأكد من بيانات GitHub داخل
-                    script.js
+                    حاول تحديث الصفحة مرة أخرى
                 </p>
 
             </div>
@@ -322,7 +360,7 @@ async function loadGallery() {
 
 
 /* =====================================================
-   CREATE FILTER BUTTONS
+   CREATE FILTERS
 ===================================================== */
 
 function createFilters() {
@@ -342,23 +380,25 @@ function createFilters() {
 
 
     /*
-        الأقسام
+        باقي الأقسام
     */
 
-    categories.forEach(category => {
+    categories.forEach(
+        category => {
 
-        createFilterButton(
-            category,
-            category
-        );
+            createFilterButton(
+                category,
+                category
+            );
 
-    });
+        }
+    );
 
 }
 
 
 /* =====================================================
-   CREATE BUTTON
+   CREATE FILTER BUTTON
 ===================================================== */
 
 function createFilterButton(
@@ -368,7 +408,9 @@ function createFilterButton(
 ) {
 
     const button =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
 
     button.className =
@@ -377,7 +419,9 @@ function createFilterButton(
 
     if (active) {
 
-        button.classList.add("active");
+        button.classList.add(
+            "active"
+        );
 
     }
 
@@ -391,17 +435,23 @@ function createFilterButton(
         () => {
 
             document
-                .querySelectorAll(".filter")
-                .forEach(btn => {
+                .querySelectorAll(
+                    ".filter"
+                )
+                .forEach(
+                    btn => {
 
-                    btn.classList.remove(
-                        "active"
-                    );
+                        btn.classList.remove(
+                            "active"
+                        );
 
-                });
+                    }
+                );
 
 
-            button.classList.add("active");
+            button.classList.add(
+                "active"
+            );
 
 
             showGallery(value);
@@ -410,7 +460,9 @@ function createFilterButton(
     );
 
 
-    filters.appendChild(button);
+    filters.appendChild(
+        button
+    );
 
 }
 
@@ -428,18 +480,22 @@ function showGallery(category) {
 
 
     /*
-        عرض الكل
+        عرض كل الأقسام
     */
 
-    if (category === "all") {
+    if (
+        category === "all"
+    ) {
 
-        galleryData.forEach(folder => {
+        galleryData.forEach(
+            folder => {
 
-            images.push(
-                ...folder.images
-            );
+                images.push(
+                    ...folder.images
+                );
 
-        });
+            }
+        );
 
     }
 
@@ -452,7 +508,8 @@ function showGallery(category) {
         const folder =
             galleryData.find(
                 item =>
-                    item.name === category
+                    item.name ===
+                    category
             );
 
 
@@ -466,29 +523,38 @@ function showGallery(category) {
     }
 
 
+    /*
+        حفظ الصور الحالية
+        لاستخدامها في Lightbox
+    */
+
     currentImages =
         images;
 
 
     /*
-        مفيش صور
+        لا توجد صور
     */
 
-    if (images.length === 0) {
+    if (
+        images.length === 0
+    ) {
 
         galleryGrid.innerHTML = `
 
             <div class="empty">
 
-                <i class="fa-regular fa-images"></i>
+                <i
+                    class="fa-regular fa-images"
+                ></i>
 
                 <h3>
                     لا توجد صور هنا
                 </h3>
 
                 <p>
-                    أضف الصور إلى فولدر هذا القسم
-                    على GitHub
+                    أضف الصور إلى فولدر
+                    هذا القسم على GitHub
                 </p>
 
             </div>
@@ -501,14 +567,16 @@ function showGallery(category) {
 
 
     /*
-        إنشاء الكروت
+        إنشاء كروت الصور
     */
 
     images.forEach(
         (image, index) => {
 
             const card =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             card.className =
@@ -527,9 +595,13 @@ function showGallery(category) {
                     loading="lazy"
                 >
 
-                <div class="gallery-overlay">
+                <div
+                    class="gallery-overlay"
+                >
 
-                    <div class="gallery-info">
+                    <div
+                        class="gallery-info"
+                    >
 
                         <small>
                             ${image.category}
@@ -541,7 +613,9 @@ function showGallery(category) {
 
                     </div>
 
-                    <div class="view-image">
+                    <div
+                        class="view-image"
+                    >
 
                         <i
                             class="fa-solid fa-expand"
@@ -554,17 +628,25 @@ function showGallery(category) {
             `;
 
 
+            /*
+                فتح الصورة
+            */
+
             card.addEventListener(
                 "click",
                 () => {
 
-                    openLightbox(index);
+                    openLightbox(
+                        index
+                    );
 
                 }
             );
 
 
-            galleryGrid.appendChild(card);
+            galleryGrid.appendChild(
+                card
+            );
 
         }
     );
@@ -612,7 +694,9 @@ function openLightbox(index) {
 function updateLightbox() {
 
     const image =
-        currentImages[currentIndex];
+        currentImages[
+            currentIndex
+        ];
 
 
     if (!image) {
@@ -669,7 +753,9 @@ function previousImage() {
     currentIndex--;
 
 
-    if (currentIndex < 0) {
+    if (
+        currentIndex < 0
+    ) {
 
         currentIndex =
             currentImages.length - 1;
@@ -733,7 +819,7 @@ function closeLightbox() {
 
 
 /* =====================================================
-   BUTTONS
+   PREVIOUS BUTTON
 ===================================================== */
 
 prevBtn.addEventListener(
@@ -742,11 +828,19 @@ prevBtn.addEventListener(
 );
 
 
+/* =====================================================
+   NEXT BUTTON
+===================================================== */
+
 nextBtn.addEventListener(
     "click",
     nextImage
 );
 
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
 
 lightboxClose.addEventListener(
     "click",
@@ -763,7 +857,8 @@ lightbox.addEventListener(
     event => {
 
         if (
-            event.target === lightbox
+            event.target ===
+            lightbox
         ) {
 
             closeLightbox();
@@ -775,12 +870,17 @@ lightbox.addEventListener(
 
 
 /* =====================================================
-   KEYBOARD
+   KEYBOARD CONTROLS
 ===================================================== */
 
 document.addEventListener(
     "keydown",
     event => {
+
+        /*
+            لو الـLightbox مقفول
+            تجاهل الأزرار
+        */
 
         if (
             !lightbox.classList.contains(
@@ -793,8 +893,13 @@ document.addEventListener(
         }
 
 
+        /*
+            سهم اليمين
+        */
+
         if (
-            event.key === "ArrowRight"
+            event.key ===
+            "ArrowRight"
         ) {
 
             previousImage();
@@ -802,8 +907,13 @@ document.addEventListener(
         }
 
 
+        /*
+            سهم الشمال
+        */
+
         if (
-            event.key === "ArrowLeft"
+            event.key ===
+            "ArrowLeft"
         ) {
 
             nextImage();
@@ -811,8 +921,13 @@ document.addEventListener(
         }
 
 
+        /*
+            Escape
+        */
+
         if (
-            event.key === "Escape"
+            event.key ===
+            "Escape"
         ) {
 
             closeLightbox();
@@ -837,8 +952,14 @@ themeBtn.addEventListener(
 
 
         const icon =
-            themeBtn.querySelector("i");
+            themeBtn.querySelector(
+                "i"
+            );
 
+
+        /*
+            الوضع الفاتح
+        */
 
         if (
             document.body.classList.contains(
@@ -850,6 +971,10 @@ themeBtn.addEventListener(
                 "fa-solid fa-sun";
 
         }
+
+        /*
+            الوضع الداكن
+        */
 
         else {
 
@@ -863,7 +988,7 @@ themeBtn.addEventListener(
 
 
 /* =====================================================
-   START
+   START WEBSITE
 ===================================================== */
 
 loadGallery();
