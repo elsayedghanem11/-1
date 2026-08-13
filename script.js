@@ -12,12 +12,12 @@ const GITHUB_BRANCH = "main";
 ===================================================== */
 
 const categories = [
-    "شهادات تقدير",
-    "كروت سبوع",
-    "كروت أفراح وكتب كتاب",
     "بصمات افراح",
-    "مناديل كتب كتاب",
-    "صور شخصية"
+    "شهادات تقدير",
+    "صور شخصية",
+    "كروت أفراح وكتب كتاب",
+    "كروت سبوع",
+    "مناديل كتب كتاب"
 ];
 
 
@@ -140,7 +140,10 @@ function getRawImageUrl(path) {
         "/" +
         path
             .split("/")
-            .map(part => encodeURIComponent(part))
+            .map(
+                part =>
+                    encodeURIComponent(part)
+            )
             .join("/")
     );
 
@@ -206,7 +209,7 @@ async function loadGallery() {
 
 
         /* =================================================
-           التأكد أن GitHub رجع الملفات
+           التأكد من وجود الملفات
         ================================================= */
 
         if (
@@ -222,7 +225,7 @@ async function loadGallery() {
 
 
         /* =================================================
-           إنشاء بيانات الأقسام
+           إنشاء الأقسام بالترتيب المحدد
         ================================================= */
 
         galleryData =
@@ -260,11 +263,13 @@ async function loadGallery() {
 
                 /*
                     images
-                    القسم
+                    اسم القسم
                     اسم الصورة
                 */
 
-                if (parts.length < 3) {
+                if (
+                    parts.length < 3
+                ) {
 
                     return;
 
@@ -276,7 +281,9 @@ async function loadGallery() {
 
 
                 const fileName =
-                    parts[parts.length - 1];
+                    parts[
+                        parts.length - 1
+                    ];
 
 
                 const folder =
@@ -318,7 +325,7 @@ async function loadGallery() {
 
 
         /* =================================================
-           إنشاء الأزرار
+           إنشاء أزرار الأقسام
         ================================================= */
 
         createFilters();
@@ -329,7 +336,6 @@ async function loadGallery() {
         ================================================= */
 
         showGallery("all");
-
 
     }
 
@@ -378,12 +384,16 @@ function createFilters() {
     filters.innerHTML = "";
 
 
+    /* زر الكل */
+
     createFilterButton(
         "الكل",
         "all",
         true
     );
 
+
+    /* الأقسام بالترتيب */
 
     categories.forEach(
         category => {
@@ -482,7 +492,7 @@ function showGallery(category) {
 
 
     /* =================================================
-       كل الصور
+       عرض كل الصور
     ================================================= */
 
     if (
@@ -503,7 +513,7 @@ function showGallery(category) {
 
 
     /* =================================================
-       قسم معين
+       عرض قسم معين
     ================================================= */
 
     else {
@@ -525,6 +535,8 @@ function showGallery(category) {
 
     }
 
+
+    /* حفظ الصور الحالية */
 
     currentImages =
         images;
@@ -560,7 +572,7 @@ function showGallery(category) {
 
 
     /* =================================================
-       إنشاء الصور
+       إنشاء كروت الصور
     ================================================= */
 
     images.forEach(
@@ -623,9 +635,7 @@ function showGallery(category) {
             `;
 
 
-            /* =================================================
-               فتح الصورة
-            ================================================= */
+            /* فتح الصورة */
 
             card.addEventListener(
                 "click",
@@ -875,6 +885,8 @@ document.addEventListener(
         }
 
 
+        /* سهم اليمين */
+
         if (
             event.key ===
             "ArrowRight"
@@ -885,6 +897,8 @@ document.addEventListener(
         }
 
 
+        /* سهم الشمال */
+
         if (
             event.key ===
             "ArrowLeft"
@@ -894,6 +908,8 @@ document.addEventListener(
 
         }
 
+
+        /* Escape */
 
         if (
             event.key ===
