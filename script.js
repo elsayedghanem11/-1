@@ -3,9 +3,7 @@
 ===================================================== */
 
 const GITHUB_USERNAME = "elsayedghanem11";
-
 const GITHUB_REPO = "-1";
-
 const GITHUB_BRANCH = "main";
 
 
@@ -14,19 +12,12 @@ const GITHUB_BRANCH = "main";
 ===================================================== */
 
 const categories = [
-
     "شهادات تقدير",
-
     "كروت سبوع",
-
     "كروت أفراح وكتب كتاب",
-
     "بصمات افراح",
-
     "مناديل كتب كتاب",
-
     "صور شخصية"
-
 ];
 
 
@@ -34,32 +25,19 @@ const categories = [
    ELEMENTS
 ===================================================== */
 
-const filters =
-    document.getElementById("filters");
+const filters = document.getElementById("filters");
+const galleryGrid = document.getElementById("galleryGrid");
 
-const galleryGrid =
-    document.getElementById("galleryGrid");
+const themeBtn = document.getElementById("themeBtn");
 
-const themeBtn =
-    document.getElementById("themeBtn");
+const lightbox = document.getElementById("lightbox");
+const lightboxImage = document.getElementById("lightboxImage");
+const lightboxInfo = document.getElementById("lightboxInfo");
 
-const lightbox =
-    document.getElementById("lightbox");
+const lightboxClose = document.getElementById("lightboxClose");
 
-const lightboxImage =
-    document.getElementById("lightboxImage");
-
-const lightboxInfo =
-    document.getElementById("lightboxInfo");
-
-const lightboxClose =
-    document.getElementById("lightboxClose");
-
-const prevBtn =
-    document.getElementById("prevBtn");
-
-const nextBtn =
-    document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
 
 
 /* =====================================================
@@ -67,9 +45,7 @@ const nextBtn =
 ===================================================== */
 
 let galleryData = [];
-
 let currentImages = [];
-
 let currentIndex = 0;
 
 
@@ -100,7 +76,6 @@ function getGitHubUrl(category) {
 function isImage(fileName) {
 
     const extensions = [
-
         ".jpg",
         ".jpeg",
         ".png",
@@ -109,13 +84,10 @@ function isImage(fileName) {
         ".bmp",
         ".jfif",
         ".avif"
-
     ];
-
 
     const lower =
         fileName.toLowerCase();
-
 
     return extensions.some(
         extension =>
@@ -139,14 +111,13 @@ function getImageName(fileName) {
 
 
 /* =====================================================
-   LOAD ONE CATEGORY
+   LOAD CATEGORY
 ===================================================== */
 
 async function loadCategory(category) {
 
     const url =
         getGitHubUrl(category);
-
 
     try {
 
@@ -156,27 +127,18 @@ async function loadCategory(category) {
             });
 
 
-        /*
-            لو الفولدر مش موجود
-            نرجع قسم فاضي
-        */
+        /* الفولدر غير موجود */
 
-        if (
-            response.status === 404
-        ) {
+        if (response.status === 404) {
 
             console.warn(
                 "Folder not found:",
                 category
             );
 
-
             return {
-
                 name: category,
-
                 images: []
-
             };
 
         }
@@ -196,18 +158,12 @@ async function loadCategory(category) {
             await response.json();
 
 
-        /*
-            ناخد الصور فقط
-        */
-
         const images =
             files
 
                 .filter(file =>
-
                     file.type === "file" &&
                     isImage(file.name)
-
                 )
 
                 .map(file => ({
@@ -244,11 +200,10 @@ async function loadCategory(category) {
     catch (error) {
 
         console.error(
-            "Error loading:",
+            "Error loading category:",
             category,
             error
         );
-
 
         return {
 
@@ -292,16 +247,10 @@ async function loadGallery() {
 
     try {
 
-        /*
-            تحميل كل الأقسام
-        */
-
         const requests =
             categories.map(
                 category =>
-                    loadCategory(
-                        category
-                    )
+                    loadCategory(category)
             );
 
 
@@ -311,16 +260,7 @@ async function loadGallery() {
             );
 
 
-        /*
-            إنشاء الأزرار
-        */
-
         createFilters();
-
-
-        /*
-            عرض كل الصور
-        */
 
         showGallery("all");
 
@@ -329,7 +269,6 @@ async function loadGallery() {
     catch (error) {
 
         console.error(error);
-
 
         createFilters();
 
@@ -368,20 +307,12 @@ function createFilters() {
     filters.innerHTML = "";
 
 
-    /*
-        زر الكل
-    */
-
     createFilterButton(
         "الكل",
         "all",
         true
     );
 
-
-    /*
-        باقي الأقسام
-    */
 
     categories.forEach(
         category => {
@@ -408,9 +339,7 @@ function createFilterButton(
 ) {
 
     const button =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
 
     button.className =
@@ -419,9 +348,7 @@ function createFilterButton(
 
     if (active) {
 
-        button.classList.add(
-            "active"
-        );
+        button.classList.add("active");
 
     }
 
@@ -435,18 +362,14 @@ function createFilterButton(
         () => {
 
             document
-                .querySelectorAll(
-                    ".filter"
-                )
-                .forEach(
-                    btn => {
+                .querySelectorAll(".filter")
+                .forEach(btn => {
 
-                        btn.classList.remove(
-                            "active"
-                        );
+                    btn.classList.remove(
+                        "active"
+                    );
 
-                    }
-                );
+                });
 
 
             button.classList.add(
@@ -475,17 +398,12 @@ function showGallery(category) {
 
     galleryGrid.innerHTML = "";
 
-
     let images = [];
 
 
-    /*
-        عرض كل الأقسام
-    */
+    /* عرض كل الصور */
 
-    if (
-        category === "all"
-    ) {
+    if (category === "all") {
 
         galleryData.forEach(
             folder => {
@@ -499,17 +417,15 @@ function showGallery(category) {
 
     }
 
-    /*
-        عرض قسم واحد
-    */
+
+    /* عرض قسم معين */
 
     else {
 
         const folder =
             galleryData.find(
                 item =>
-                    item.name ===
-                    category
+                    item.name === category
             );
 
 
@@ -523,22 +439,13 @@ function showGallery(category) {
     }
 
 
-    /*
-        حفظ الصور الحالية
-        لاستخدامها في Lightbox
-    */
-
     currentImages =
         images;
 
 
-    /*
-        لا توجد صور
-    */
+    /* لا توجد صور */
 
-    if (
-        images.length === 0
-    ) {
+    if (images.length === 0) {
 
         galleryGrid.innerHTML = `
 
@@ -552,11 +459,6 @@ function showGallery(category) {
                     لا توجد صور هنا
                 </h3>
 
-                <p>
-                    أضف الصور إلى فولدر
-                    هذا القسم على GitHub
-                </p>
-
             </div>
 
         `;
@@ -566,17 +468,13 @@ function showGallery(category) {
     }
 
 
-    /*
-        إنشاء كروت الصور
-    */
+    /* إنشاء الصور */
 
     images.forEach(
         (image, index) => {
 
             const card =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
 
             card.className =
@@ -613,6 +511,7 @@ function showGallery(category) {
 
                     </div>
 
+
                     <div
                         class="view-image"
                     >
@@ -628,17 +527,11 @@ function showGallery(category) {
             `;
 
 
-            /*
-                فتح الصورة
-            */
-
             card.addEventListener(
                 "click",
                 () => {
 
-                    openLightbox(
-                        index
-                    );
+                    openLightbox(index);
 
                 }
             );
@@ -694,9 +587,7 @@ function openLightbox(index) {
 function updateLightbox() {
 
     const image =
-        currentImages[
-            currentIndex
-        ];
+        currentImages[currentIndex];
 
 
     if (!image) {
@@ -819,7 +710,7 @@ function closeLightbox() {
 
 
 /* =====================================================
-   PREVIOUS BUTTON
+   BUTTON EVENTS
 ===================================================== */
 
 prevBtn.addEventListener(
@@ -828,19 +719,11 @@ prevBtn.addEventListener(
 );
 
 
-/* =====================================================
-   NEXT BUTTON
-===================================================== */
-
 nextBtn.addEventListener(
     "click",
     nextImage
 );
 
-
-/* =====================================================
-   CLOSE BUTTON
-===================================================== */
 
 lightboxClose.addEventListener(
     "click",
@@ -849,7 +732,7 @@ lightboxClose.addEventListener(
 
 
 /* =====================================================
-   CLICK OUTSIDE IMAGE
+   CLICK OUTSIDE LIGHTBOX
 ===================================================== */
 
 lightbox.addEventListener(
@@ -857,8 +740,7 @@ lightbox.addEventListener(
     event => {
 
         if (
-            event.target ===
-            lightbox
+            event.target === lightbox
         ) {
 
             closeLightbox();
@@ -877,11 +759,6 @@ document.addEventListener(
     "keydown",
     event => {
 
-        /*
-            لو الـLightbox مقفول
-            تجاهل الأزرار
-        */
-
         if (
             !lightbox.classList.contains(
                 "show"
@@ -893,13 +770,8 @@ document.addEventListener(
         }
 
 
-        /*
-            سهم اليمين
-        */
-
         if (
-            event.key ===
-            "ArrowRight"
+            event.key === "ArrowRight"
         ) {
 
             previousImage();
@@ -907,13 +779,8 @@ document.addEventListener(
         }
 
 
-        /*
-            سهم الشمال
-        */
-
         if (
-            event.key ===
-            "ArrowLeft"
+            event.key === "ArrowLeft"
         ) {
 
             nextImage();
@@ -921,13 +788,8 @@ document.addEventListener(
         }
 
 
-        /*
-            Escape
-        */
-
         if (
-            event.key ===
-            "Escape"
+            event.key === "Escape"
         ) {
 
             closeLightbox();
@@ -952,14 +814,8 @@ themeBtn.addEventListener(
 
 
         const icon =
-            themeBtn.querySelector(
-                "i"
-            );
+            themeBtn.querySelector("i");
 
-
-        /*
-            الوضع الفاتح
-        */
 
         if (
             document.body.classList.contains(
@@ -971,10 +827,6 @@ themeBtn.addEventListener(
                 "fa-solid fa-sun";
 
         }
-
-        /*
-            الوضع الداكن
-        */
 
         else {
 
@@ -988,7 +840,7 @@ themeBtn.addEventListener(
 
 
 /* =====================================================
-   START WEBSITE
+   START
 ===================================================== */
 
 loadGallery();
