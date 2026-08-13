@@ -86,8 +86,7 @@ function isImage(fileName) {
         ".avif"
     ];
 
-    const lower =
-        fileName.toLowerCase();
+    const lower = fileName.toLowerCase();
 
     return extensions.some(
         extension =>
@@ -116,25 +115,21 @@ function getImageName(fileName) {
 
 async function loadCategory(category) {
 
-    const url =
-        getGitHubUrl(category);
-
     try {
 
-        const response =
-            await fetch(url, {
+        const response = await fetch(
+            getGitHubUrl(category),
+            {
                 cache: "no-store"
-            });
+            }
+        );
 
 
-        /* الفولدر غير موجود */
+        /* =========================
+           FOLDER NOT FOUND
+        ========================= */
 
         if (response.status === 404) {
-
-            console.warn(
-                "Folder not found:",
-                category
-            );
 
             return {
                 name: category,
@@ -143,6 +138,10 @@ async function loadCategory(category) {
 
         }
 
+
+        /* =========================
+           OTHER ERROR
+        ========================= */
 
         if (!response.ok) {
 
@@ -154,44 +153,41 @@ async function loadCategory(category) {
         }
 
 
-        const files =
-            await response.json();
+        const files = await response.json();
 
 
-        const images =
-            files
+        /* =========================
+           GET IMAGES
+        ========================= */
 
-                .filter(file =>
-                    file.type === "file" &&
-                    isImage(file.name)
-                )
+        const images = files
 
-                .map(file => ({
+            .filter(file =>
+                file.type === "file" &&
+                isImage(file.name)
+            )
 
-                    name:
-                        getImageName(
-                            file.name
-                        ),
+            .map(file => ({
 
-                    fileName:
-                        file.name,
+                name:
+                    getImageName(file.name),
 
-                    url:
-                        file.download_url,
+                fileName:
+                    file.name,
 
-                    category:
-                        category
+                url:
+                    file.download_url,
 
-                }));
+                category:
+                    category
+
+            }));
 
 
         return {
 
-            name:
-                category,
-
-            images:
-                images
+            name: category,
+            images: images
 
         };
 
@@ -205,13 +201,11 @@ async function loadCategory(category) {
             error
         );
 
+
         return {
 
-            name:
-                category,
-
-            images:
-                []
+            name: category,
+            images: []
 
         };
 
@@ -247,20 +241,30 @@ async function loadGallery() {
 
     try {
 
-        const requests =
-            categories.map(
-                category =>
-                    loadCategory(category)
-            );
+        /* =========================
+           LOAD ALL CATEGORIES
+        ========================= */
+
+        const requests = categories.map(
+            category =>
+                loadCategory(category)
+        );
 
 
         galleryData =
-            await Promise.all(
-                requests
-            );
+            await Promise.all(requests);
 
+
+        /* =========================
+           CREATE BUTTONS
+        ========================= */
 
         createFilters();
+
+
+        /* =========================
+           SHOW ALL
+        ========================= */
 
         showGallery("all");
 
@@ -270,6 +274,7 @@ async function loadGallery() {
 
         console.error(error);
 
+
         createFilters();
 
 
@@ -277,9 +282,7 @@ async function loadGallery() {
 
             <div class="error">
 
-                <i
-                    class="fa-solid fa-triangle-exclamation"
-                ></i>
+                <i class="fa-solid fa-triangle-exclamation"></i>
 
                 <h3>
                     حصل خطأ في تحميل الأعمال
@@ -307,6 +310,10 @@ function createFilters() {
     filters.innerHTML = "";
 
 
+    /* =========================
+       ALL BUTTON
+    ========================= */
+
     createFilterButton(
         "الكل",
         "all",
@@ -314,16 +321,18 @@ function createFilters() {
     );
 
 
-    categories.forEach(
-        category => {
+    /* =========================
+       CATEGORY BUTTONS
+    ========================= */
 
-            createFilterButton(
-                category,
-                category
-            );
+    categories.forEach(category => {
 
-        }
-    );
+        createFilterButton(
+            category,
+            category
+        );
+
+    });
 
 }
 
@@ -342,8 +351,7 @@ function createFilterButton(
         document.createElement("button");
 
 
-    button.className =
-        "filter";
+    button.className = "filter";
 
 
     if (active) {
@@ -353,8 +361,7 @@ function createFilterButton(
     }
 
 
-    button.textContent =
-        text;
+    button.textContent = text;
 
 
     button.addEventListener(
@@ -372,9 +379,7 @@ function createFilterButton(
                 });
 
 
-            button.classList.add(
-                "active"
-            );
+            button.classList.add("active");
 
 
             showGallery(value);
@@ -383,9 +388,7 @@ function createFilterButton(
     );
 
 
-    filters.appendChild(
-        button
-    );
+    filters.appendChild(button);
 
 }
 
@@ -398,27 +401,30 @@ function showGallery(category) {
 
     galleryGrid.innerHTML = "";
 
+
     let images = [];
 
 
-    /* عرض كل الصور */
+    /* =========================
+       SHOW ALL
+    ========================= */
 
     if (category === "all") {
 
-        galleryData.forEach(
-            folder => {
+        galleryData.forEach(folder => {
 
-                images.push(
-                    ...folder.images
-                );
+            images.push(
+                ...folder.images
+            );
 
-            }
-        );
+        });
 
     }
 
 
-    /* عرض قسم معين */
+    /* =========================
+       SHOW CATEGORY
+    ========================= */
 
     else {
 
@@ -431,19 +437,23 @@ function showGallery(category) {
 
         if (folder) {
 
-            images =
-                folder.images;
+            images = folder.images;
 
         }
 
     }
 
 
-    currentImages =
-        images;
+    /* =========================
+       SAVE CURRENT IMAGES
+    ========================= */
+
+    currentImages = images;
 
 
-    /* لا توجد صور */
+    /* =========================
+       NO IMAGES
+    ========================= */
 
     if (images.length === 0) {
 
@@ -451,9 +461,7 @@ function showGallery(category) {
 
             <div class="empty">
 
-                <i
-                    class="fa-regular fa-images"
-                ></i>
+                <i class="fa-regular fa-images"></i>
 
                 <h3>
                     لا توجد صور هنا
@@ -468,7 +476,9 @@ function showGallery(category) {
     }
 
 
-    /* إنشاء الصور */
+    /* =========================
+       CREATE IMAGE CARDS
+    ========================= */
 
     images.forEach(
         (image, index) => {
@@ -493,13 +503,9 @@ function showGallery(category) {
                     loading="lazy"
                 >
 
-                <div
-                    class="gallery-overlay"
-                >
+                <div class="gallery-overlay">
 
-                    <div
-                        class="gallery-info"
-                    >
+                    <div class="gallery-info">
 
                         <small>
                             ${image.category}
@@ -511,14 +517,9 @@ function showGallery(category) {
 
                     </div>
 
+                    <div class="view-image">
 
-                    <div
-                        class="view-image"
-                    >
-
-                        <i
-                            class="fa-solid fa-expand"
-                        ></i>
+                        <i class="fa-solid fa-expand"></i>
 
                     </div>
 
@@ -526,6 +527,10 @@ function showGallery(category) {
 
             `;
 
+
+            /* =========================
+               OPEN IMAGE
+            ========================= */
 
             card.addEventListener(
                 "click",
@@ -537,9 +542,7 @@ function showGallery(category) {
             );
 
 
-            galleryGrid.appendChild(
-                card
-            );
+            galleryGrid.appendChild(card);
 
         }
     );
@@ -553,25 +556,20 @@ function showGallery(category) {
 
 function openLightbox(index) {
 
-    if (
-        currentImages.length === 0
-    ) {
+    if (currentImages.length === 0) {
 
         return;
 
     }
 
 
-    currentIndex =
-        index;
+    currentIndex = index;
 
 
     updateLightbox();
 
 
-    lightbox.classList.add(
-        "show"
-    );
+    lightbox.classList.add("show");
 
 
     document.body.style.overflow =
@@ -632,9 +630,7 @@ function updateLightbox() {
 
 function previousImage() {
 
-    if (
-        currentImages.length === 0
-    ) {
+    if (currentImages.length === 0) {
 
         return;
 
@@ -644,9 +640,7 @@ function previousImage() {
     currentIndex--;
 
 
-    if (
-        currentIndex < 0
-    ) {
+    if (currentIndex < 0) {
 
         currentIndex =
             currentImages.length - 1;
@@ -665,9 +659,7 @@ function previousImage() {
 
 function nextImage() {
 
-    if (
-        currentImages.length === 0
-    ) {
+    if (currentImages.length === 0) {
 
         return;
 
@@ -698,13 +690,10 @@ function nextImage() {
 
 function closeLightbox() {
 
-    lightbox.classList.remove(
-        "show"
-    );
+    lightbox.classList.remove("show");
 
 
-    document.body.style.overflow =
-        "";
+    document.body.style.overflow = "";
 
 }
 
@@ -739,9 +728,7 @@ lightbox.addEventListener(
     "click",
     event => {
 
-        if (
-            event.target === lightbox
-        ) {
+        if (event.target === lightbox) {
 
             closeLightbox();
 
@@ -770,27 +757,27 @@ document.addEventListener(
         }
 
 
-        if (
-            event.key === "ArrowRight"
-        ) {
+        /* RIGHT */
+
+        if (event.key === "ArrowRight") {
 
             previousImage();
 
         }
 
 
-        if (
-            event.key === "ArrowLeft"
-        ) {
+        /* LEFT */
+
+        if (event.key === "ArrowLeft") {
 
             nextImage();
 
         }
 
 
-        if (
-            event.key === "Escape"
-        ) {
+        /* ESC */
+
+        if (event.key === "Escape") {
 
             closeLightbox();
 
@@ -840,7 +827,7 @@ themeBtn.addEventListener(
 
 
 /* =====================================================
-   START
+   START WEBSITE
 ===================================================== */
 
 loadGallery();
