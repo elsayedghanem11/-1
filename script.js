@@ -15,7 +15,7 @@ const categories = [
     "بصمات افراح",
     "شهادات تقدير",
     "صور شخصية",
-    "كروت أفراح وكتب كتاب",
+    "كروت افراح وكتب كتاب",
     "كروت سبوع",
     "مناديل كتب كتاب"
 ];
@@ -58,9 +58,7 @@ const nextBtn =
 ===================================================== */
 
 let galleryData = [];
-
 let currentImages = [];
-
 let currentIndex = 0;
 
 
@@ -106,7 +104,7 @@ function getImageName(fileName) {
 
 
 /* =====================================================
-   GET GITHUB TREE URL
+   GITHUB TREE URL
 ===================================================== */
 
 function getGitHubTreeUrl() {
@@ -125,7 +123,7 @@ function getGitHubTreeUrl() {
 
 
 /* =====================================================
-   GET RAW IMAGE URL
+   RAW IMAGE URL
 ===================================================== */
 
 function getRawImageUrl(path) {
@@ -151,7 +149,7 @@ function getRawImageUrl(path) {
 
 
 /* =====================================================
-   LOAD ALL IMAGES
+   LOAD GALLERY
 ===================================================== */
 
 async function loadGallery() {
@@ -177,10 +175,6 @@ async function loadGallery() {
 
     try {
 
-        /* =================================================
-           طلب واحد فقط إلى GitHub
-        ================================================= */
-
         const response =
             await fetch(
                 getGitHubTreeUrl(),
@@ -189,10 +183,6 @@ async function loadGallery() {
                 }
             );
 
-
-        /* =================================================
-           التأكد من نجاح الطلب
-        ================================================= */
 
         if (!response.ok) {
 
@@ -208,10 +198,6 @@ async function loadGallery() {
             await response.json();
 
 
-        /* =================================================
-           التأكد من وجود الملفات
-        ================================================= */
-
         if (
             !data.tree ||
             !Array.isArray(data.tree)
@@ -225,7 +211,7 @@ async function loadGallery() {
 
 
         /* =================================================
-           إنشاء الأقسام بالترتيب المحدد
+           CREATE CATEGORIES
         ================================================= */
 
         galleryData =
@@ -233,7 +219,6 @@ async function loadGallery() {
                 category => ({
 
                     name: category,
-
                     images: []
 
                 })
@@ -241,7 +226,7 @@ async function loadGallery() {
 
 
         /* =================================================
-           البحث عن الصور داخل images
+           FIND IMAGES
         ================================================= */
 
         data.tree
@@ -260,12 +245,6 @@ async function loadGallery() {
                 const parts =
                     item.path.split("/");
 
-
-                /*
-                    images
-                    اسم القسم
-                    اسم الصورة
-                */
 
                 if (
                     parts.length < 3
@@ -325,14 +304,14 @@ async function loadGallery() {
 
 
         /* =================================================
-           إنشاء أزرار الأقسام
+           CREATE FILTERS
         ================================================= */
 
         createFilters();
 
 
         /* =================================================
-           عرض كل الصور
+           SHOW ALL
         ================================================= */
 
         showGallery("all");
@@ -384,7 +363,7 @@ function createFilters() {
     filters.innerHTML = "";
 
 
-    /* زر الكل */
+    /* الكل */
 
     createFilterButton(
         "الكل",
@@ -487,12 +466,11 @@ function showGallery(category) {
 
     galleryGrid.innerHTML = "";
 
-
     let images = [];
 
 
     /* =================================================
-       عرض كل الصور
+       SHOW ALL
     ================================================= */
 
     if (
@@ -513,7 +491,7 @@ function showGallery(category) {
 
 
     /* =================================================
-       عرض قسم معين
+       SHOW CATEGORY
     ================================================= */
 
     else {
@@ -536,14 +514,12 @@ function showGallery(category) {
     }
 
 
-    /* حفظ الصور الحالية */
-
     currentImages =
         images;
 
 
     /* =================================================
-       لا توجد صور
+       NO IMAGES
     ================================================= */
 
     if (
@@ -572,7 +548,7 @@ function showGallery(category) {
 
 
     /* =================================================
-       إنشاء كروت الصور
+       CREATE IMAGE CARDS
     ================================================= */
 
     images.forEach(
@@ -885,8 +861,6 @@ document.addEventListener(
         }
 
 
-        /* سهم اليمين */
-
         if (
             event.key ===
             "ArrowRight"
@@ -897,8 +871,6 @@ document.addEventListener(
         }
 
 
-        /* سهم الشمال */
-
         if (
             event.key ===
             "ArrowLeft"
@@ -908,8 +880,6 @@ document.addEventListener(
 
         }
 
-
-        /* Escape */
 
         if (
             event.key ===
