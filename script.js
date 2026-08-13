@@ -2,8 +2,10 @@
    GITHUB SETTINGS
 ===================================================== */
 
-const GITHUB_USERNAME = "elsayedghanem";
+const GITHUB_USERNAME = "elsayedghanem11";
+
 const GITHUB_REPO = "-1";
+
 const GITHUB_BRANCH = "main";
 
 
@@ -12,12 +14,19 @@ const GITHUB_BRANCH = "main";
 ===================================================== */
 
 const categories = [
+
     "شهادات تقدير",
+
     "كروت سبوع",
+
     "كروت أفراح وكتب كتاب",
+
     "بصمات افراح",
+
     "مناديل كتب كتاب",
+
     "صور شخصية"
+
 ];
 
 
@@ -359,12 +368,20 @@ function createFilters() {
     filters.innerHTML = "";
 
 
+    /*
+        زر الكل
+    */
+
     createFilterButton(
         "الكل",
         "all",
         true
     );
 
+
+    /*
+        باقي الأقسام
+    */
 
     categories.forEach(
         category => {
@@ -462,6 +479,10 @@ function showGallery(category) {
     let images = [];
 
 
+    /*
+        عرض كل الأقسام
+    */
+
     if (
         category === "all"
     ) {
@@ -477,6 +498,10 @@ function showGallery(category) {
         );
 
     }
+
+    /*
+        عرض قسم واحد
+    */
 
     else {
 
@@ -497,6 +522,11 @@ function showGallery(category) {
 
     }
 
+
+    /*
+        حفظ الصور الحالية
+        لاستخدامها في Lightbox
+    */
 
     currentImages =
         images;
@@ -535,6 +565,10 @@ function showGallery(category) {
 
     }
 
+
+    /*
+        إنشاء كروت الصور
+    */
 
     images.forEach(
         (image, index) => {
@@ -593,6 +627,10 @@ function showGallery(category) {
 
             `;
 
+
+            /*
+                فتح الصورة
+            */
 
             card.addEventListener(
                 "click",
@@ -781,7 +819,7 @@ function closeLightbox() {
 
 
 /* =====================================================
-   BUTTON EVENTS
+   PREVIOUS BUTTON
 ===================================================== */
 
 prevBtn.addEventListener(
@@ -790,11 +828,19 @@ prevBtn.addEventListener(
 );
 
 
+/* =====================================================
+   NEXT BUTTON
+===================================================== */
+
 nextBtn.addEventListener(
     "click",
     nextImage
 );
 
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
 
 lightboxClose.addEventListener(
     "click",
@@ -831,6 +877,11 @@ document.addEventListener(
     "keydown",
     event => {
 
+        /*
+            لو الـLightbox مقفول
+            تجاهل الأزرار
+        */
+
         if (
             !lightbox.classList.contains(
                 "show"
@@ -842,6 +893,10 @@ document.addEventListener(
         }
 
 
+        /*
+            سهم اليمين
+        */
+
         if (
             event.key ===
             "ArrowRight"
@@ -852,6 +907,10 @@ document.addEventListener(
         }
 
 
+        /*
+            سهم الشمال
+        */
+
         if (
             event.key ===
             "ArrowLeft"
@@ -861,6 +920,10 @@ document.addEventListener(
 
         }
 
+
+        /*
+            Escape
+        */
 
         if (
             event.key ===
@@ -894,6 +957,10 @@ themeBtn.addEventListener(
             );
 
 
+        /*
+            الوضع الفاتح
+        */
+
         if (
             document.body.classList.contains(
                 "light"
@@ -904,6 +971,10 @@ themeBtn.addEventListener(
                 "fa-solid fa-sun";
 
         }
+
+        /*
+            الوضع الداكن
+        */
 
         else {
 
