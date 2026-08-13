@@ -1,13 +1,4 @@
 /* =====================================================
-   GITHUB SETTINGS
-===================================================== */
-
-const GITHUB_USERNAME = "elsayedghanem11";
-const GITHUB_REPO = "-1";
-const GITHUB_BRANCH = "main";
-
-
-/* =====================================================
    CATEGORIES
 ===================================================== */
 
@@ -25,32 +16,19 @@ const categories = [
    ELEMENTS
 ===================================================== */
 
-const filters =
-    document.getElementById("filters");
+const filters = document.getElementById("filters");
+const galleryGrid = document.getElementById("galleryGrid");
 
-const galleryGrid =
-    document.getElementById("galleryGrid");
+const themeBtn = document.getElementById("themeBtn");
 
-const themeBtn =
-    document.getElementById("themeBtn");
+const lightbox = document.getElementById("lightbox");
+const lightboxImage = document.getElementById("lightboxImage");
+const lightboxInfo = document.getElementById("lightboxInfo");
 
-const lightbox =
-    document.getElementById("lightbox");
+const lightboxClose = document.getElementById("lightboxClose");
 
-const lightboxImage =
-    document.getElementById("lightboxImage");
-
-const lightboxInfo =
-    document.getElementById("lightboxInfo");
-
-const lightboxClose =
-    document.getElementById("lightboxClose");
-
-const prevBtn =
-    document.getElementById("prevBtn");
-
-const nextBtn =
-    document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
 
 
 /* =====================================================
@@ -63,38 +41,13 @@ let currentIndex = 0;
 
 
 /* =====================================================
-   CHECK IMAGE
-===================================================== */
-
-function isImage(fileName) {
-
-    const extensions = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp",
-        ".gif",
-        ".bmp",
-        ".jfif",
-        ".avif"
-    ];
-
-    const lower =
-        fileName.toLowerCase();
-
-    return extensions.some(
-        extension =>
-            lower.endsWith(extension)
-    );
-
-}
-
-
-/* =====================================================
    GET IMAGE NAME
 ===================================================== */
 
-function getImageName(fileName) {
+function getImageName(path) {
+
+    const fileName =
+        path.split("/").pop();
 
     return fileName
         .replace(/\.[^/.]+$/, "")
@@ -104,52 +57,7 @@ function getImageName(fileName) {
 
 
 /* =====================================================
-   GITHUB TREE URL
-===================================================== */
-
-function getGitHubTreeUrl() {
-
-    return (
-        "https://api.github.com/repos/" +
-        encodeURIComponent(GITHUB_USERNAME) +
-        "/" +
-        encodeURIComponent(GITHUB_REPO) +
-        "/git/trees/" +
-        encodeURIComponent(GITHUB_BRANCH) +
-        "?recursive=1"
-    );
-
-}
-
-
-/* =====================================================
-   RAW IMAGE URL
-===================================================== */
-
-function getRawImageUrl(path) {
-
-    return (
-        "https://raw.githubusercontent.com/" +
-        encodeURIComponent(GITHUB_USERNAME) +
-        "/" +
-        encodeURIComponent(GITHUB_REPO) +
-        "/" +
-        encodeURIComponent(GITHUB_BRANCH) +
-        "/" +
-        path
-            .split("/")
-            .map(
-                part =>
-                    encodeURIComponent(part)
-            )
-            .join("/")
-    );
-
-}
-
-
-/* =====================================================
-   LOAD GALLERY
+   LOAD IMAGES.JSON
 ===================================================== */
 
 async function loadGallery() {
@@ -165,29 +73,24 @@ async function loadGallery() {
             </h3>
 
             <p>
-                بنجيب الصور من GitHub...
+                انتظر لحظة...
             </p>
 
         </div>
 
     `;
 
-
     try {
 
-        const response =
-            await fetch(
-                getGitHubTreeUrl(),
-                {
-                    cache: "no-store"
-                }
-            );
+        const response = await fetch(
+            "images.json?v=" + Date.now()
+        );
 
 
         if (!response.ok) {
 
             throw new Error(
-                "GitHub API Error: " +
+                "images.json Error: " +
                 response.status
             );
 
@@ -198,123 +101,52 @@ async function loadGallery() {
             await response.json();
 
 
-        if (
-            !data.tree ||
-            !Array.isArray(data.tree)
-        ) {
-
-            throw new Error(
-                "GitHub did not return a file tree"
-            );
-
-        }
-
-
         /* =================================================
-           CREATE CATEGORIES
+           تحويل البيانات إلى الشكل المطلوب
         ================================================= */
 
         galleryData =
-            categories.map(
-                category => ({
+            categories.map(category => {
 
-                    name: category,
-                    images: []
-
-                })
-            );
+                const files =
+                    data[category] || [];
 
 
-        /* =================================================
-           FIND IMAGES
-        ================================================= */
+                const images =
+                    files.map(path => ({
 
-        data.tree
+                        name:
+                            getImageName(path),
 
-            .filter(item =>
-                item.type === "blob" &&
-                item.path.startsWith("images/")
-            )
+                        fileName:
+                            path.split("/").pop(),
 
-            .filter(item =>
-                isImage(item.path)
-            )
+                        url:
+                            path,
 
-            .forEach(item => {
-
-                const parts =
-                    item.path.split("/");
-
-
-                if (
-                    parts.length < 3
-                ) {
-
-                    return;
-
-                }
-
-
-                const category =
-                    parts[1];
-
-
-                const fileName =
-                    parts[
-                        parts.length - 1
-                    ];
-
-
-                const folder =
-                    galleryData.find(
-                        item =>
-                            item.name ===
+                        category:
                             category
-                    );
+
+                    }));
 
 
-                if (!folder) {
-
-                    return;
-
-                }
-
-
-                folder.images.push({
+                return {
 
                     name:
-                        getImageName(
-                            fileName
-                        ),
+                        category,
 
-                    fileName:
-                        fileName,
+                    images:
+                        images
 
-                    url:
-                        getRawImageUrl(
-                            item.path
-                        ),
-
-                    category:
-                        category
-
-                });
+                };
 
             });
 
 
-        /* =================================================
-           CREATE FILTERS
-        ================================================= */
-
         createFilters();
 
-
-        /* =================================================
-           SHOW ALL
-        ================================================= */
-
         showGallery("all");
+
 
     }
 
@@ -326,23 +158,18 @@ async function loadGallery() {
         );
 
 
-        createFilters();
-
-
         galleryGrid.innerHTML = `
 
             <div class="error">
 
-                <i
-                    class="fa-solid fa-triangle-exclamation"
-                ></i>
+                <i class="fa-solid fa-triangle-exclamation"></i>
 
                 <h3>
                     حصل خطأ في تحميل الصور
                 </h3>
 
                 <p>
-                    حاول تحديث الصفحة مرة أخرى
+                    تأكد أن ملف images.json موجود بجوار index.html
                 </p>
 
             </div>
@@ -363,8 +190,6 @@ function createFilters() {
     filters.innerHTML = "";
 
 
-    /* الكل */
-
     createFilterButton(
         "الكل",
         "all",
@@ -372,18 +197,14 @@ function createFilters() {
     );
 
 
-    /* الأقسام بالترتيب */
+    categories.forEach(category => {
 
-    categories.forEach(
-        category => {
+        createFilterButton(
+            category,
+            category
+        );
 
-            createFilterButton(
-                category,
-                category
-            );
-
-        }
-    );
+    });
 
 }
 
@@ -399,9 +220,7 @@ function createFilterButton(
 ) {
 
     const button =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
 
     button.className =
@@ -426,18 +245,14 @@ function createFilterButton(
         () => {
 
             document
-                .querySelectorAll(
-                    ".filter"
-                )
-                .forEach(
-                    btn => {
+                .querySelectorAll(".filter")
+                .forEach(btn => {
 
-                        btn.classList.remove(
-                            "active"
-                        );
+                    btn.classList.remove(
+                        "active"
+                    );
 
-                    }
-                );
+                });
 
 
             button.classList.add(
@@ -470,28 +285,24 @@ function showGallery(category) {
 
 
     /* =================================================
-       SHOW ALL
+       ALL
     ================================================= */
 
-    if (
-        category === "all"
-    ) {
+    if (category === "all") {
 
-        galleryData.forEach(
-            folder => {
+        galleryData.forEach(folder => {
 
-                images.push(
-                    ...folder.images
-                );
+            images.push(
+                ...folder.images
+            );
 
-            }
-        );
+        });
 
     }
 
 
     /* =================================================
-       SHOW CATEGORY
+       CATEGORY
     ================================================= */
 
     else {
@@ -499,8 +310,7 @@ function showGallery(category) {
         const folder =
             galleryData.find(
                 item =>
-                    item.name ===
-                    category
+                    item.name === category
             );
 
 
@@ -522,17 +332,13 @@ function showGallery(category) {
        NO IMAGES
     ================================================= */
 
-    if (
-        images.length === 0
-    ) {
+    if (images.length === 0) {
 
         galleryGrid.innerHTML = `
 
             <div class="empty">
 
-                <i
-                    class="fa-regular fa-images"
-                ></i>
+                <i class="fa-regular fa-images"></i>
 
                 <h3>
                     لا توجد صور هنا
@@ -555,9 +361,7 @@ function showGallery(category) {
         (image, index) => {
 
             const card =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
 
             card.className =
@@ -571,19 +375,15 @@ function showGallery(category) {
             card.innerHTML = `
 
                 <img
-                    src="${image.url}"
+                    src="${encodeURI(image.url)}"
                     alt="${image.name}"
                     loading="lazy"
                     decoding="async"
                 >
 
-                <div
-                    class="gallery-overlay"
-                >
+                <div class="gallery-overlay">
 
-                    <div
-                        class="gallery-info"
-                    >
+                    <div class="gallery-info">
 
                         <small>
                             ${image.category}
@@ -596,13 +396,9 @@ function showGallery(category) {
                     </div>
 
 
-                    <div
-                        class="view-image"
-                    >
+                    <div class="view-image">
 
-                        <i
-                            class="fa-solid fa-expand"
-                        ></i>
+                        <i class="fa-solid fa-expand"></i>
 
                     </div>
 
@@ -611,15 +407,11 @@ function showGallery(category) {
             `;
 
 
-            /* فتح الصورة */
-
             card.addEventListener(
                 "click",
                 () => {
 
-                    openLightbox(
-                        index
-                    );
+                    openLightbox(index);
 
                 }
             );
@@ -675,9 +467,7 @@ function openLightbox(index) {
 function updateLightbox() {
 
     const image =
-        currentImages[
-            currentIndex
-        ];
+        currentImages[currentIndex];
 
 
     if (!image) {
@@ -688,7 +478,7 @@ function updateLightbox() {
 
 
     lightboxImage.src =
-        image.url;
+        encodeURI(image.url);
 
 
     lightboxImage.alt =
@@ -717,7 +507,7 @@ function updateLightbox() {
 
 
 /* =====================================================
-   PREVIOUS IMAGE
+   PREVIOUS
 ===================================================== */
 
 function previousImage() {
@@ -750,7 +540,7 @@ function previousImage() {
 
 
 /* =====================================================
-   NEXT IMAGE
+   NEXT
 ===================================================== */
 
 function nextImage() {
@@ -822,7 +612,7 @@ lightboxClose.addEventListener(
 
 
 /* =====================================================
-   CLICK OUTSIDE LIGHTBOX
+   CLICK OUTSIDE
 ===================================================== */
 
 lightbox.addEventListener(
@@ -830,8 +620,7 @@ lightbox.addEventListener(
     event => {
 
         if (
-            event.target ===
-            lightbox
+            event.target === lightbox
         ) {
 
             closeLightbox();
@@ -843,7 +632,7 @@ lightbox.addEventListener(
 
 
 /* =====================================================
-   KEYBOARD CONTROLS
+   KEYBOARD
 ===================================================== */
 
 document.addEventListener(
@@ -862,8 +651,7 @@ document.addEventListener(
 
 
         if (
-            event.key ===
-            "ArrowRight"
+            event.key === "ArrowRight"
         ) {
 
             previousImage();
@@ -872,8 +660,7 @@ document.addEventListener(
 
 
         if (
-            event.key ===
-            "ArrowLeft"
+            event.key === "ArrowLeft"
         ) {
 
             nextImage();
@@ -882,8 +669,7 @@ document.addEventListener(
 
 
         if (
-            event.key ===
-            "Escape"
+            event.key === "Escape"
         ) {
 
             closeLightbox();
@@ -908,9 +694,7 @@ themeBtn.addEventListener(
 
 
         const icon =
-            themeBtn.querySelector(
-                "i"
-            );
+            themeBtn.querySelector("i");
 
 
         if (
