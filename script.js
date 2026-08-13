@@ -44,7 +44,13 @@ const nextBtn = document.getElementById("nextBtn");
    DATA
 ===================================================== */
 
-let galleryData = [];
+let galleryData = categories.map(category => ({
+    name: category,
+    images: [],
+    loaded: false,
+    loading: false
+}));
+
 let currentImages = [];
 let currentIndex = 0;
 
@@ -110,38 +116,76 @@ function getImageName(fileName) {
 
 
 /* =====================================================
-   LOAD CATEGORY
+   LOAD ONE CATEGORY
 ===================================================== */
 
 async function loadCategory(category) {
 
-    try {
-
-        const response = await fetch(
-            getGitHubUrl(category),
-            {
-                cache: "no-store"
-            }
+    const folder =
+        galleryData.find(
+            item => item.name === category
         );
 
+    if (!folder) {
+        return [];
+    }
 
-        /* =========================
-           FOLDER NOT FOUND
-        ========================= */
+
+    /* لو اتحمل قبل كده */
+
+    if (folder.loaded) {
+        return folder.images;
+    }
+
+
+    /* لو بيتحمل حاليًا */
+
+    if (folder.loading) {
+        return folder.images;
+    }
+
+
+    folder.loading = true;
+
+
+    try {
+
+        const response =
+            await fetch(
+                getGitHubUrl(category),
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        /* الفولدر غير موجود */
 
         if (response.status === 404) {
 
-            return {
-                name: category,
-                images: []
-            };
+            folder.images = [];
+            folder.loaded = true;
+            folder.loading = false;
+
+            return [];
 
         }
 
 
-        /* =========================
-           OTHER ERROR
-        ========================= */
+        /* GitHub API limit */
+
+        if (response.status === 403) {
+
+            console.error(
+                "GitHub API limit or permission error."
+            );
+
+            folder.loading = false;
+
+            return [];
+
+        }
+
 
         if (!response.ok) {
 
@@ -153,61 +197,55 @@ async function loadCategory(category) {
         }
 
 
-        const files = await response.json();
+        const files =
+            await response.json();
 
 
-        /* =========================
-           GET IMAGES
-        ========================= */
+        folder.images =
+            files
 
-        const images = files
+                .filter(file =>
+                    file.type === "file" &&
+                    isImage(file.name)
+                )
 
-            .filter(file =>
-                file.type === "file" &&
-                isImage(file.name)
-            )
+                .map(file => ({
 
-            .map(file => ({
+                    name:
+                        getImageName(file.name),
 
-                name:
-                    getImageName(file.name),
+                    fileName:
+                        file.name,
 
-                fileName:
-                    file.name,
+                    url:
+                        file.download_url,
 
-                url:
-                    file.download_url,
+                    category:
+                        category
 
-                category:
-                    category
-
-            }));
+                }));
 
 
-        return {
+        folder.loaded = true;
+        folder.loading = false;
 
-            name: category,
-            images: images
 
-        };
+        return folder.images;
 
     }
 
     catch (error) {
 
         console.error(
-            "Error loading category:",
+            "Error loading:",
             category,
             error
         );
 
 
-        return {
+        folder.loading = false;
 
-            name: category,
-            images: []
-
-        };
+        return [];
 
     }
 
@@ -215,94 +253,7 @@ async function loadCategory(category) {
 
 
 /* =====================================================
-   LOAD GALLERY
-===================================================== */
-
-async function loadGallery() {
-
-    galleryGrid.innerHTML = `
-
-        <div class="loading">
-
-            <div class="loader"></div>
-
-            <h3>
-                جاري تحميل الأعمال
-            </h3>
-
-            <p>
-                بنجيب الصور من GitHub...
-            </p>
-
-        </div>
-
-    `;
-
-
-    try {
-
-        /* =========================
-           LOAD ALL CATEGORIES
-        ========================= */
-
-        const requests = categories.map(
-            category =>
-                loadCategory(category)
-        );
-
-
-        galleryData =
-            await Promise.all(requests);
-
-
-        /* =========================
-           CREATE BUTTONS
-        ========================= */
-
-        createFilters();
-
-
-        /* =========================
-           SHOW ALL
-        ========================= */
-
-        showGallery("all");
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-
-        createFilters();
-
-
-        galleryGrid.innerHTML = `
-
-            <div class="error">
-
-                <i class="fa-solid fa-triangle-exclamation"></i>
-
-                <h3>
-                    حصل خطأ في تحميل الأعمال
-                </h3>
-
-                <p>
-                    حاول تحديث الصفحة مرة أخرى
-                </p>
-
-            </div>
-
-        `;
-
-    }
-
-}
-
-
-/* =====================================================
-   CREATE FILTERS
+   INITIAL PAGE
 ===================================================== */
 
 function createFilters() {
@@ -310,20 +261,12 @@ function createFilters() {
     filters.innerHTML = "";
 
 
-    /* =========================
-       ALL BUTTON
-    ========================= */
-
     createFilterButton(
         "الكل",
         "all",
         true
     );
 
-
-    /* =========================
-       CATEGORY BUTTONS
-    ========================= */
 
     categories.forEach(category => {
 
@@ -366,7 +309,7 @@ function createFilterButton(
 
     button.addEventListener(
         "click",
-        () => {
+        async () => {
 
             document
                 .querySelectorAll(".filter")
@@ -382,7 +325,7 @@ function createFilterButton(
             button.classList.add("active");
 
 
-            showGallery(value);
+            await showGallery(value);
 
         }
     );
@@ -394,91 +337,130 @@ function createFilterButton(
 
 
 /* =====================================================
+   LOADING MESSAGE
+===================================================== */
+
+function showLoading() {
+
+    galleryGrid.innerHTML = `
+
+        <div class="loading">
+
+            <div class="loader"></div>
+
+            <h3>
+                جاري تحميل الأعمال
+            </h3>
+
+            <p>
+                انتظر لحظة...
+            </p>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   EMPTY MESSAGE
+===================================================== */
+
+function showEmpty() {
+
+    galleryGrid.innerHTML = `
+
+        <div class="empty">
+
+            <i class="fa-regular fa-images"></i>
+
+            <h3>
+                لا توجد صور هنا
+            </h3>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
    SHOW GALLERY
 ===================================================== */
 
-function showGallery(category) {
+async function showGallery(category) {
 
-    galleryGrid.innerHTML = "";
+    showLoading();
 
 
     let images = [];
 
 
-    /* =========================
-       SHOW ALL
-    ========================= */
+    /* =================================================
+       ALL
+    ================================================= */
 
     if (category === "all") {
 
-        galleryData.forEach(folder => {
+        /*
+           نحمل الأقسام واحدًا واحدًا
+           بدل 6 طلبات في نفس اللحظة
+        */
+
+        for (const currentCategory of categories) {
+
+            const categoryImages =
+                await loadCategory(
+                    currentCategory
+                );
+
 
             images.push(
-                ...folder.images
+                ...categoryImages
             );
-
-        });
-
-    }
-
-
-    /* =========================
-       SHOW CATEGORY
-    ========================= */
-
-    else {
-
-        const folder =
-            galleryData.find(
-                item =>
-                    item.name === category
-            );
-
-
-        if (folder) {
-
-            images = folder.images;
 
         }
 
     }
 
 
-    /* =========================
-       SAVE CURRENT IMAGES
-    ========================= */
+    /* =================================================
+       ONE CATEGORY
+    ================================================= */
 
-    currentImages = images;
+    else {
+
+        images =
+            await loadCategory(
+                category
+            );
+
+    }
 
 
-    /* =========================
-       NO IMAGES
-    ========================= */
+    currentImages =
+        images;
+
+
+    /* لا توجد صور */
 
     if (images.length === 0) {
 
-        galleryGrid.innerHTML = `
-
-            <div class="empty">
-
-                <i class="fa-regular fa-images"></i>
-
-                <h3>
-                    لا توجد صور هنا
-                </h3>
-
-            </div>
-
-        `;
+        showEmpty();
 
         return;
 
     }
 
 
-    /* =========================
-       CREATE IMAGE CARDS
-    ========================= */
+    galleryGrid.innerHTML = "";
+
+
+    /* =================================================
+       CREATE CARDS
+    ================================================= */
 
     images.forEach(
         (image, index) => {
@@ -501,6 +483,7 @@ function showGallery(category) {
                     src="${image.url}"
                     alt="${image.name}"
                     loading="lazy"
+                    decoding="async"
                 >
 
                 <div class="gallery-overlay">
@@ -528,10 +511,6 @@ function showGallery(category) {
             `;
 
 
-            /* =========================
-               OPEN IMAGE
-            ========================= */
-
             card.addEventListener(
                 "click",
                 () => {
@@ -556,14 +535,17 @@ function showGallery(category) {
 
 function openLightbox(index) {
 
-    if (currentImages.length === 0) {
+    if (
+        currentImages.length === 0
+    ) {
 
         return;
 
     }
 
 
-    currentIndex = index;
+    currentIndex =
+        index;
 
 
     updateLightbox();
@@ -630,7 +612,9 @@ function updateLightbox() {
 
 function previousImage() {
 
-    if (currentImages.length === 0) {
+    if (
+        currentImages.length === 0
+    ) {
 
         return;
 
@@ -640,7 +624,9 @@ function previousImage() {
     currentIndex--;
 
 
-    if (currentIndex < 0) {
+    if (
+        currentIndex < 0
+    ) {
 
         currentIndex =
             currentImages.length - 1;
@@ -659,7 +645,9 @@ function previousImage() {
 
 function nextImage() {
 
-    if (currentImages.length === 0) {
+    if (
+        currentImages.length === 0
+    ) {
 
         return;
 
@@ -690,10 +678,13 @@ function nextImage() {
 
 function closeLightbox() {
 
-    lightbox.classList.remove("show");
+    lightbox.classList.remove(
+        "show"
+    );
 
 
-    document.body.style.overflow = "";
+    document.body.style.overflow =
+        "";
 
 }
 
@@ -721,14 +712,16 @@ lightboxClose.addEventListener(
 
 
 /* =====================================================
-   CLICK OUTSIDE LIGHTBOX
+   CLICK OUTSIDE
 ===================================================== */
 
 lightbox.addEventListener(
     "click",
     event => {
 
-        if (event.target === lightbox) {
+        if (
+            event.target === lightbox
+        ) {
 
             closeLightbox();
 
@@ -739,7 +732,7 @@ lightbox.addEventListener(
 
 
 /* =====================================================
-   KEYBOARD CONTROLS
+   KEYBOARD
 ===================================================== */
 
 document.addEventListener(
@@ -757,27 +750,27 @@ document.addEventListener(
         }
 
 
-        /* RIGHT */
-
-        if (event.key === "ArrowRight") {
+        if (
+            event.key === "ArrowRight"
+        ) {
 
             previousImage();
 
         }
 
 
-        /* LEFT */
-
-        if (event.key === "ArrowLeft") {
+        if (
+            event.key === "ArrowLeft"
+        ) {
 
             nextImage();
 
         }
 
 
-        /* ESC */
-
-        if (event.key === "Escape") {
+        if (
+            event.key === "Escape"
+        ) {
 
             closeLightbox();
 
@@ -830,4 +823,11 @@ themeBtn.addEventListener(
    START WEBSITE
 ===================================================== */
 
-loadGallery();
+createFilters();
+
+/*
+   نبدأ بقسم "الكل"
+   والأقسام تتحمل بالتتابع
+*/
+
+showGallery("all");
